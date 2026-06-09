@@ -7,14 +7,19 @@
 #include <QGuiApplication>
 #include <QList>
 #include <QRandomGenerator>
+#include <QObject>
 
 #include <X11/Xlib.h>
 #include <X11/extensions/scrnsaver.h>
 
+#include <QFile>
+#include <QTextStream>
+
 class ClockWindow : public QWidget
 {
 public:
-    ClockWindow(QScreen *screen)
+    ClockWindow(QScreen *screen,
+                const QString &title)
     {
         setScreen(screen);
 
@@ -23,13 +28,16 @@ public:
 
         setGeometry(screen->geometry());
 
-        titleLabel = new QLabel("Studio GG", this);
+        titleLabel = new QLabel(title, this);
         titleLabel->setStyleSheet("color:white;");
 
         QFont titleFont;
         titleFont.setPointSize(40);
         titleFont.setBold(true);
-        titleFont.setLetterSpacing(QFont::AbsoluteSpacing, 5);
+        titleFont.setLetterSpacing(
+            QFont::AbsoluteSpacing,
+            4
+        );
 
         titleLabel->setFont(titleFont);
         titleLabel->adjustSize();
@@ -101,7 +109,9 @@ private:
     void updateClock()
     {
         clockLabel->setText(
-            QTime::currentTime().toString("HH:mm:ss")
+            QTime::currentTime().toString(
+                "HH:mm:ss"
+            )
         );
 
         clockLabel->adjustSize();
@@ -120,6 +130,25 @@ class ClockSaver : public QObject
 public:
     ClockSaver()
     {
+        title = "Studio GG";
+
+        QFile file(
+            "/opt/gg-clocksaver/gg-clocksaver.conf"
+        );
+
+        if (file.open(
+                QIODevice::ReadOnly |
+                QIODevice::Text))
+        {
+            QTextStream in(&file);
+
+            QString line =
+                in.readLine().trimmed();
+
+            if (!line.isEmpty())
+                title = line;
+        }
+
         idleTimer = new QTimer(this);
 
         connect(idleTimer,
@@ -145,10 +174,12 @@ private:
     QTimer *moveTimer;
 
     bool saverVisible = false;
+    QString title;
 
     unsigned long idleTime()
     {
-        Display *display = XOpenDisplay(nullptr);
+        Display *display =
+            XOpenDisplay(nullptr);
 
         if (!display)
             return 0;
@@ -162,7 +193,8 @@ private:
             info
         );
 
-        unsigned long idle = info->idle;
+        unsigned long idle =
+            info->idle;
 
         XFree(info);
         XCloseDisplay(display);
@@ -184,9 +216,15 @@ private:
         for (QScreen *screen : screens)
         {
             auto *window =
-                new ClockWindow(screen);
+                new ClockWindow(
+                    screen,
+                    title
+                );
 
-            window->setCursor(Qt::BlankCursor);
+            window->setCursor(
+                Qt::BlankCursor
+            );
+
             window->showFullScreen();
 
             windows.append(window);
@@ -207,7 +245,7 @@ private:
 
         switchCell();
 
-        moveTimer->start(10000); // 10 sekundi
+        moveTimer->start(10000);
 
         saverVisible = true;
     }
@@ -243,7 +281,8 @@ private:
             QRandomGenerator::global()
             ->bounded(cells.size());
 
-        Cell &cell = cells[index];
+        Cell &cell =
+            cells[index];
 
         cell.window->moveToCell(
             cell.row,
@@ -255,9 +294,11 @@ private:
 
     void checkIdle()
     {
-        const unsigned long timeout = 240000; // 4 minuta
+        const unsigned long timeout =
+            240000; // 4 minuta
 
-        unsigned long idle = idleTime();
+        unsigned long idle =
+            idleTime();
 
         if (!saverVisible)
         {
@@ -270,6 +311,11 @@ private:
                 hideSaver();
         }
     }
+public:
+    void showPreview()
+    {
+        showSaver();
+    }
 };
 
 int main(int argc, char *argv[])
@@ -279,6 +325,13 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
 
     ClockSaver saver;
+
+    QStringList args = app.arguments();
+
+    if (args.contains("--preview"))
+    {
+        saver.showPreview();
+    }
 
     return app.exec();
 }
