@@ -1,4 +1,4 @@
-**To change the 'title' or counter**
+**To change the 'title' or counter:**
 
 
 If you have the C++ and Qt development libraries installed, you can compile the program manually like this:
