@@ -27,7 +27,7 @@ sudo apt install libqt6core6 libqt6gui6 libqt6widgets6 libxss1
 Run:
 
 1. Copy the entire folder to /opt/.
-2. Copy "GG Clock Saver" to your Startup (Autostart) folder.
+2. Copy "GG Clock Saver" (gg-clocksaver.desktop) to your Startup (Autostart) folder.
 
 The application is a desktop executable. By adding it to Startup, the screensaver will run in the background at all times, monitoring user inactivity and automatically activating when the system becomes idle.
 
