@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=GG Clock Saver
+Exec=/opt/gg-clocksaver/gg-clocksaver
+X-GNOME-Autostart-enabled=true
